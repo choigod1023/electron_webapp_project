@@ -5,8 +5,8 @@
 // selectively enable features needed in the rendering
 // process.
 const request = require('request')
-var date = new Date();
-var hours = date.getHours();
+var d = new Date();
+var hours = d.getHours();
 var PM_or_AM = 'AM'
 if (hours > 12) {
     hours = `${hours - 12}`
@@ -18,14 +18,15 @@ else if (hours == 12) {
 }
 else
     hours = `${hours}`
-var minutes = date.getMinutes();
+var minutes = d.getMinutes();
 if (minutes < 10)
     minutes = '0' + minutes
-var month = date.getMonth();
-var day = date.getDay();
+var month = d.getMonth();
+var date = d.getDate();
+var day = d.getDay();
 var week = ['일', '월', '화', '수', '목', '금', '토'];
 var clock = document.getElementById("clock")
-clock.innerHTML = `<div id="clocks">${hours} : ${minutes} ${PM_or_AM}</div>` + `<div id="day">${month + 1}월 ${day}일 ${week[day]}요일</div>`
+clock.innerHTML += `<div id="clocks">${hours} : ${minutes} ${PM_or_AM}</div>` + `<div id="day">${month + 1}월 ${date}일 ${week[day]}요일</div>`
 function return_img(current_dt, sunrise, sunset, weather, clouds) {
     if ('Rain' == weather) {
         return './img/rainy.png'
@@ -56,7 +57,32 @@ function return_img(current_dt, sunrise, sunset, weather, clouds) {
     }
 
 }
-
+request('https://m.stock.naver.com/api/json/search/searchListJson.nhn?keyword=apple', (err, res, body) => {
+    stock_json = JSON.parse(body)
+    var result = stock_json.result.d
+    for (var i = 0; i < result.length; i++) {
+        var stock = result[i]
+        var stock_name = stock.nm
+        var int_stock_rate = parseFloat(stock.cr).toFixed(2)
+        var stock_code = stock.cd
+        if (int_stock_rate > 0) {
+            var stock_rate = '+' + int_stock_rate.toString()
+        }
+        if (stock.cd == "AAPL.O") {
+            stock_code = "AAPL"
+            var stock = document.getElementById('stock_name')
+            var rate = document.getElementById('stock_rate')
+            stock.innerHTML += `${stock_name}(${stock_code})`
+            rate.innerHTML += `(${stock_rate}%)`
+            if (int_stock_rate > 0) {
+                rate.style.color = 'red'
+            }
+            else {
+                rate.style.color = 'blue'
+            }
+        }
+    }
+})
 request('https://api.openweathermap.org/data/2.5/onecall?lat=37.636731897070234&lon=127.03512399778694&appid=4ada87268facd87550e6a5126401fda4&units=metric', (err, res, body) => {
     weather_json = JSON.parse(body)
     var weather_hours = weather_json.hourly
